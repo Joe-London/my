@@ -1,0 +1,321 @@
+---
+title: "Computer Project 2"
+author: "Zhongyuan Zhao"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+```{r include=FALSE}
+library(fmsb)
+library(tidyverse)
+library(Hmisc)
+library(scatterplot3d)
+library(plotly)
+```
+## Mid square mathod<br>
+**Question A:** 
+Implement the Middle-Square RNG in R as a separate function named mid_square_rng. More specifically, make the function take two input arguments: N followed by X0, where N denotes the desired length of the random sequence R0 , R1 , R2 , . . . to be generated, and X0 stands for the seed. Your function must return the random sequence R0, R1, R2, . . . , RN−1 assuming that m = 10 000.
+Submit your script.
+
+**ANSWER:**
+
+```{r}
+mid_square_rng <- function(seed,N){
+  mid<-NULL
+  for (i in 1:N) {
+    square <- seed * seed
+    y <- nchar(square, type = 'bytes')
+    if(y <8){
+      k <- 8-y
+      for (j in 1:k) {
+        square <- paste0("0",as.character(square) )
+      }
+    }
+    else{}
+    Y <- as.numeric(substr(square, start = 3, stop = 6))
+    seed <- as.numeric(paste(Y,collapse= ""))
+    mid <- c(mid, seed/10000)
+  }
+  return(mid)
+}
+```
+
+<br>
+**Question B:**
+Set the seed to X0 = 1 010 and use your mid_square_rng to generate a series of N = 20 uniform [0, 1] random numbers. Report the obtained series.
+
+**ANSWER:**
+```{r}
+mid_square_rng(1010, 20)
+```
+<br>From the function we set seed = 1010 and N = 20. We got a series but it become really small and turns to zero finally. So it is not a good random number generater.<br> 
+
+
+**Question C:**
+Set the seed to X0 = 6 100 and use your mid_square_rng to generate a series of N = 20 uniform [0, 1] random numbers. Report the obtained series.
+
+**ANSWER:**
+```{r}
+mid_square_rng(6100,20)
+```
+<br>From the function we set seed = 6100 and N = 20. We got a series but it has a loop. It repeats 0.21,0.41,0.81,0.61. So it is not random.<br>
+
+
+**Question D:**
+Set the seed to X0 = 3 792 and use your mid_square_rng to generate a series of N = 20 uniform [0, 1] random numbers. Report the obtained series. Comment briefly on the obtained series.
+
+**ANSWER:**
+```{r}
+mid_square_rng(3792,20)
+```
+<br>From the function we set seed = 3792 and N = 20. We got a series always repeat 0.3792. So it is also not random.<br> 
+
+
+
+**Question E:**
+Explain briefly why if the initial value X0 is selected from the set {0, 1, . . . , 9 999} it is impossible to ever have Xk2 more than eight digits long, for any k ⩾ 1.
+
+**ANSWER:**
+Since 9999 * 9999 = 99980001. it is 8 digit. It is the biggest number you can have. So every number should be lease than 99980001. So it can not be more than 8 digit.<br> 
+
+**Question F:**
+Based on the series you generated in part (b) explain briefly why the Middle-Square RNG is not a reliable source of random numbers.
+
+**ANSWER:**
+Based on what I got from question b. the number become really small. so it is not random. It would not cover everything.That is why it is not a reliable way. <br>
+
+
+**Question G:**
+The series you generated in part (c) is an example of yet another problem that the Middle-Square RNG may exhibit when used as a source of random numbers. What is that problem?
+
+
+**ANSWER:**
+It have a loop. It repeat 0.21,0.41,0.81,0.61. <br>
+
+
+
+
+
+
+
+## LEHMER RNG
+**Question A:**
+Implement Lehmer’s RNG in R as a separate function named lehmer_rng. More specifically, make the function take five input arguments: N, followed by m, followed by a, followed by b, followed X0, where N denotes the desired length of the random sequence R0, R1, R2, . . . to be generated, m is the modulus, a is the multiplier, b is the increment, and X0 stands for the seed. Your function must return the random sequence R0, R1, R2, . . . , RN−1.
+Submit your script.
+
+**ANSWER:**
+```{r}
+lehmer_rng <- function(N, m, a, b, X0){
+  rng <- vector(length = N)
+  X <- NULL
+  for (i in 1:N) {
+    X <- (a * X0 + b) %% m
+    X0 <- X
+    P <- X0 / m
+    rng[i] <- P
+  }
+  print(rng)
+  return(rng)
+}
+```
+
+
+**Question B:**
+Set X0 = 1, m = 16, and b = 1. Use your lehmer_rng function to generate a series of N = 16 uniform [0, 1] random numbers for a = 3, 4, 5, . . . , 15. Visualize the series using the radarchart function: make the contours represent the value of Xk and the radial numbers represent the serial number of Xk in the sequence. For what values of a is the period of the series the largest?
+Submit your radarcharts along with your analysis.
+
+**ANSWER:**
+```{r include=FALSE}
+A <- matrix(data = NA, nrow = 13, ncol = 16, byrow = FALSE )
+k <- 1
+for (i in 3:15) {
+  row_i <- lehmer_rng(16, 16, i, 1, 1)
+  A[k,] <- row_i
+  k <- k+1
+}
+```
+
+```{r}
+A <- data.frame(A)
+dfA <- data.frame(rbind(rep(1,16), rep(0,16),A))
+df1 <- data.frame(rbind(rep(1,16), rep(0,16),A[1,]))
+df2 <- data.frame(rbind(rep(1,16), rep(0,16),A[2,]))
+df3 <- data.frame(rbind(rep(1,16), rep(0,16),A[3,]))
+df4 <- data.frame(rbind(rep(1,16), rep(0,16),A[4,]))
+df5 <- data.frame(rbind(rep(1,16), rep(0,16),A[5,]))
+df6 <- data.frame(rbind(rep(1,16), rep(0,16),A[6,]))
+df7 <- data.frame(rbind(rep(1,16), rep(0,16),A[7,]))
+df8 <- data.frame(rbind(rep(1,16), rep(0,16),A[8,]))
+df9 <- data.frame(rbind(rep(1,16), rep(0,16),A[9,]))
+df10 <- data.frame(rbind(rep(1,16), rep(0,16),A[10,]))
+df11 <- data.frame(rbind(rep(1,16), rep(0,16),A[11,]))
+df12 <- data.frame(rbind(rep(1,16), rep(0,16),A[12,]))
+df13 <- data.frame(rbind(rep(1,16), rep(0,16),A[13,]))
+row.names(A) <- paste0('a =', 3:15)
+A
+```
+
+```{r}
+radarchart(dfA, title = "A total", axistype = 1, axislabcol = "grey", cglty = 1, cglcol = "gray", plwd = 1.5, plty = 1)
+```
+<br>It is difficult to see when they are together. So let's make them separately. 
+
+```{r}
+radarchart(df1,title = "a=3", axistype = 1, axislabcol = "grey")
+radarchart(df2,title = "a=4", axistype = 1, axislabcol = "grey")
+radarchart(df3,title = "a=5", axistype = 1, axislabcol = "grey")
+radarchart(df4,title = "a=6", axistype = 1, axislabcol = "grey")
+radarchart(df5,title = "a=7", axistype = 1, axislabcol = "grey")
+radarchart(df6,title = "a=8", axistype = 1, axislabcol = "grey")
+radarchart(df7,title = "a=9", axistype = 1, axislabcol = "grey")
+radarchart(df8,title = "a=10", axistype = 1, axislabcol = "grey")
+radarchart(df9,title = "a=11", axistype = 1, axislabcol = "grey")
+radarchart(df10,title = "a=12", axistype = 1, axislabcol = "grey")
+radarchart(df11,title = "a=13", axistype = 1, axislabcol = "grey")
+radarchart(df12,title = "a=14", axistype = 1, axislabcol = "grey")
+radarchart(df13,title = "a=15", axistype = 1, axislabcol = "grey")
+```
+
+```{r}
+apply(A,1,function(x)length(unique(x)))
+```
+<br>So according to what we got from here. We can say that when a = 3,4,6,7,8,10,11,12,14,15. Either they stay in same value or symmetric. When a = 5,9,13. They have the same series period 16. So a = 5,9,13 are the largest period. 
+
+**Question C:**
+Set X0 = 1, m = 16, and a = 5. Use your lehmer_rng function to generate a series of N = 16 uniform [0, 1] random numbers for b = 2, 3, 4, . . . , 8. Visualize the series using the radarchart function: make the contours represent the value of Xk and the radial numbers represent the serial number of Xk in the sequence. For what values of b is the period of the series the largest?
+Submit your radarcharts along with your analysis.
+
+
+**ANSWER:**
+```{r message=TRUE, include=FALSE}
+B <- matrix(data = NA, nrow = 7, ncol = 16, byrow = FALSE )
+l <- 1
+for (h in 2:8) {
+  row_j <- lehmer_rng(16, 16, 5, h, 1)
+  B[l,] <- row_j
+  l <- l+1
+}
+
+B <- data.frame(B)
+dfB <- data.frame(rbind(rep(1,16), rep(0,16),B))
+dfb1 <- data.frame(rbind(rep(1,16), rep(0,16),B[1,]))
+dfb2 <- data.frame(rbind(rep(1,16), rep(0,16),B[2,]))
+dfb3 <- data.frame(rbind(rep(1,16), rep(0,16),B[3,]))
+dfb4 <- data.frame(rbind(rep(1,16), rep(0,16),B[4,]))
+dfb5 <- data.frame(rbind(rep(1,16), rep(0,16),B[5,]))
+dfb6 <- data.frame(rbind(rep(1,16), rep(0,16),B[6,]))
+dfb7 <- data.frame(rbind(rep(1,16), rep(0,16),B[7,]))
+row.names(B) <- paste0('b=',2:8)
+B
+```
+
+```{r}
+radarchart(dfB,title = "B total", axistype = 1, axislabcol = "grey", cglty = 1, cglcol = "gray", plwd = 1.5, plty = 1)
+radarchart(dfb1,title = "b=2")
+radarchart(dfb2,title = "b=3")
+radarchart(dfb3,title = "b=4")
+radarchart(dfb4,title = "b=5")
+radarchart(dfb5,title = "b=6")
+radarchart(dfb6,title = "b=7")
+radarchart(dfb7,title = "b=8")
+apply(B, 1, function(x)length(unique(x)))
+```
+<br>Same as last question. When b = 2,4,6,8. The values are all same or symmetric. So b = 3,5,7 have the same series period 16 are the largest.
+
+**Question D:**
+Set X0 = 6, m = 100, a = 21, and b = 1. Use your lehmer_rng function to generate a series of N = 20 uniform [0, 1] random numbers. Report the obtained series, and briefly comment on it.
+
+**ANSWER:**
+```{r}
+D <- lehmer_rng(20, 100, 21, 1, 6)
+```
+```{r}
+hist(D,breaks = 50)
+```
+<br>According to the histogram. Each bin do not have same frequency. In this case, it has more probability to give us small numbers than others. So it is not a good combination. 
+
+
+**Question E:**
+Set X0 = 1, m = 211, a = 1229, and b = 1. Use your lehmer_rng function to generate a series of N = 5000 uniform [0,1] random numbers. Construct a histogram of the obtained series. Feel free to choose the bins as you please. What does the shape of the histogram suggest as to the statistical properties of the obtained random series? Submit the histogram.
+
+**ANSWER:**
+```{r include=FALSE}
+E <- lehmer_rng(5000,2^11,1229,1,1)
+```
+```{r}
+hist(E, breaks = 50)
+```
+<br>The frequency is nearly the same. so it sames to be random. But it still need to be verified. 
+
+**Question F:**
+For the random series you generated in the previous part create a scatterplot showing Rk+1 as a function of Rk. This kind of a plot is a standard technique used in statistics to understand the nature of inter-dependence or correlation (if any) between successive elements in the sample. What conclusion can you reach from the scatterplot about the series you generated in part (e)? Submit the scatterplot.
+
+**ANSWER:**
+```{r}
+E_p <- Lag(E,1)
+E_p[1] <- 1
+plot(E_p,E ,xlab="E_p ", ylab="E",title("Plot of E"))
+```
+<br>After get the scatterplot of the data we get from problem e. We can say the next number we get from the RNG is strongly depended on previous one. So we can have a conclusion. This is not a good RNG.
+
+
+**Question G:**
+Repeat parts (e) and (f) with X0 = 1, m = 244 944, a = 1 597, and b = 51 749. Does the new set parameters improve the quality of Lehmer’s RNG? Briefly justify your answer.
+
+
+**ANSWER:**
+```{r include=FALSE}
+G <- lehmer_rng(5000, 244944, 1597, 51749, 1)
+hist(G, breaks = 50)
+```
+
+```{r}
+G_p <- Lag(G, 1)
+G_p[1] <- 1
+plot(G_p,G,xlab="G_p ", ylab="G",title("Plot of G"))
+```
+<br>From the new set we got. We can see from the histogram. That the frequency seems to be random. After check the relation between the next number and previous number. It seems to be unrelated. So it really improve the quality of RNG.
+
+
+**Question H:**
+Repeat parts (e) and (f) for X0 = 1, m = 231, a = 216 + 3, and b = 0. For this choice of parameters Lehmer’s RNG is known as RANDU, an RNG proposed by IBM in the 1960s. Would you say RANDU is a good RNG? Briefly justify your answer.
+
+
+**ANSWER:**
+```{r include=FALSE}
+H <- lehmer_rng(5000, 2^31, 2^16+3, 0, 1)
+```
+
+```{r}
+hist(H, breaks = 50)
+H_p <- Lag(H, 1)
+H_p[1] <- 1
+plot(H_p,H,xlab="H_p ", ylab="H",title("Plot of H"))
+```
+<br>From the Histogram and plot we got. It seems to be a really good RNG since it has very good frequency and numbers we generated are not related. 
+
+
+**Question I:**
+For the series you generated in the previous part construct a 3D scatterplot showing Rk+1 as a bivariate function of Rk and Rk−1. This kind of a plot offers a deeper insight into the correlation structure of the sampled data. What does the 3D scatterplot suggest as to the quality of RANDU? Briefly justify your answer.
+
+**ANSWER:**
+```{r}
+I <- H
+I_p <- Lag(I,1)
+I_p[1] <- 1
+I_pp <- Lag(I_p,1)
+I_pp[1] <- 0
+scatterplot3d(I_p, I, I_pp, main = '3D Plot of I')
+```
+<br>For a better understanding. Let's make a scatterplot which can be rotated.
+```{r include=FALSE}
+k<-data_frame(I_p,I,I_pp)
+g <- plot_ly(k,x=~I_p,y=~I,z=~I_pp,size=1)
+```
+```{r}
+g
+```
+<br>After we got the 3Dscatterplot. We can found that even they do not have relation in 2-dimension but in 3-dimension we can see that they are strongly related. So RANDU is not a really good RNG.
+
